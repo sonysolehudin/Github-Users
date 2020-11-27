@@ -2,13 +2,11 @@ package com.example.githubuser
 
 import android.app.SearchManager
 import android.content.Context
-import android.os.AsyncTask
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
-import android.view.View
 import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -17,7 +15,6 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.loopj.android.http.AsyncHttpClient
 import com.loopj.android.http.AsyncHttpResponseHandler
-import com.loopj.android.http.TextHttpResponseHandler
 import cz.msebera.android.httpclient.Header
 import kotlinx.android.synthetic.main.activity_backpressed.*
 import kotlinx.android.synthetic.main.activity_main.*
@@ -29,16 +26,23 @@ import kotlin.collections.ArrayList
 
 class MainActivity : AppCompatActivity() {
 
-    private var usergit = ArrayList<GitUsers>()
-    var check_data = true
-    //val MAIN_URL: String = ""
+    private var usergit: ArrayList<GitUsers> = ArrayList()
+    private lateinit var gituseradapter: Gituser_Adapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        gituseradapter = Gituser_Adapter(usergit)
+        InitRecyclerView()
         GetData()
-        //usergit.addAll(ListGitusers())
-        //showRecycler()
+    }
+
+    fun InitRecyclerView(){
+        rv_gitusers.layoutManager = LinearLayoutManager(rv_gitusers.context)
+        rv_gitusers.setHasFixedSize(true)
+        val line = DividerItemDecoration(this.applicationContext, DividerItemDecoration.VERTICAL)
+        line.setDrawable(ContextCompat.getDrawable(applicationContext,R.drawable.divider)!!)
+        rv_gitusers.addItemDecoration(line)
     }
 
     fun GetData(){
@@ -58,7 +62,6 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                     catch(e : Exception){
-                        Toast.makeText(this@MainActivity, e.message, Toast.LENGTH_SHORT).show()
                         e.printStackTrace()
                     }
                 }
@@ -70,7 +73,7 @@ class MainActivity : AppCompatActivity() {
                         404 -> "$statusCode : Not Found"
                         else -> "$statusCode : ${error.message}"
                     }
-                    Toast.makeText(this@MainActivity, errorMessage, Toast.LENGTH_LONG).show()
+                    Log.d("Jenis Kegagalan: ", errorMessage)
                     dialog_no_internet()
                 }
             })
@@ -99,7 +102,6 @@ class MainActivity : AppCompatActivity() {
                     ListGitusers(datalogin, datafollowers, datafollowing, dataphoto)
                 }
                 catch (e: Exception) {
-                    Toast.makeText(this@MainActivity, e.message, Toast.LENGTH_SHORT).show()
                     e.printStackTrace()
                 }
             }
@@ -111,7 +113,7 @@ class MainActivity : AppCompatActivity() {
                     404 -> "$statusCode : Not Found"
                     else -> "$statusCode : ${error.message}"
                 }
-                Toast.makeText(this@MainActivity, errorMessage, Toast.LENGTH_LONG).show()
+                Log.d("Jenis Kegagalan: ", errorMessage)
                 dialog_no_internet()
             }
         })
@@ -120,15 +122,12 @@ class MainActivity : AppCompatActivity() {
     fun ListGitusers(name: String, f1: String, f2: String, pic: String){
         shimmer_layout.stopShimmerAnimation()
         shimmer_layout.removeAllViews()
-        rv_gitusers.hasFixedSize()
-        val listgit: ArrayList<GitUsers> = ArrayList()
-        listgit.add(GitUsers(name, f1, f2, pic, null, null, null, null))
-        rv_gitusers.layoutManager = LinearLayoutManager(applicationContext)
-        val gituseradapter = Gituser_Adapter(usergit)
+
+        usergit.add(GitUsers(name, f1, f2, pic, null, null, null, null))
+        rv_gitusers.layoutManager = LinearLayoutManager(this)
+        gituseradapter = Gituser_Adapter(usergit)
         rv_gitusers.adapter = gituseradapter
-        val line = DividerItemDecoration(this.applicationContext, DividerItemDecoration.VERTICAL)
-        line.setDrawable(ContextCompat.getDrawable(applicationContext,R.drawable.divider)!!)
-        rv_gitusers.addItemDecoration(line)
+
         gituseradapter.setOnItemClickCallback(object : Gituser_Adapter.OnItemClickCallback {
             override fun onItemClicked(data: GitUsers) {
                 showSelectedUsers(data)
